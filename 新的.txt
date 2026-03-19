@@ -1,0 +1,414 @@
+ï»¿<!DOCTYPE html>
+<html lang="zh-TW" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChronosDream | Classroom Terminal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      /* Design System Tokens */
+      --background: #0e0e13;
+      --on-background: #f8f5fd;
+      --primary: #aaffdc; /* Neon Green */
+      --on-primary: #00654b;
+      --secondary: #ff59e3; /* Neon Pink */
+      --tertiary: #ac89ff; /* Ethereal Purple */
+      --surface: #131318;
+      --surface-container-low: #19191f;
+      --surface-container-high: #25252c;
+      --outline-variant: rgba(170, 255, 220, 0.15);
+      
+      --neon-glow-primary: 0 0 15px rgba(170, 255, 220, 0.6);
+      --neon-glow-secondary: 0 0 15px rgba(255, 89, 227, 0.6);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--background);
+      color: var(--on-background);
+      font-family: 'Manrope', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+    }
+
+    /* ­I´º¸Ë¹¢¡Gºô®æ»PÂø°T */
+    .bg-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+      background-image: 
+        radial-gradient(circle at 50% 50%, rgba(172, 137, 255, 0.05) 0%, transparent 70%),
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+      opacity: 0.4;
+    }
+
+    /* ®e¾¹§G§½ */
+    .container {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+      padding: 40px 20px;
+      width: min(1000px, 96vw);
+    }
+
+    /* ¢w¢w MODE SWITCHER ¢w¢w */
+    .mode-switcher {
+      display: flex;
+      background: var(--surface-container-low);
+      padding: 4px;
+      border-radius: 0.375rem; /* roundedness.md */
+    }
+    .mode-btn {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 10px 28px;
+      border: none;
+      background: transparent;
+      color: rgba(248, 245, 253, 0.4);
+      cursor: pointer;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      transition: all .3s;
+      border-radius: 0.25rem;
+    }
+    .mode-btn.active {
+      background: var(--surface-container-high);
+      color: var(--primary);
+      box-shadow: var(--neon-glow-primary);
+    }
+
+    /* ¢w¢w DIGITAL CLOCK ¢w¢w */
+    .clock-section {
+      text-align: center;
+      position: relative;
+    }
+    .date-line {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.2rem;
+      color: var(--tertiary);
+      letter-spacing: 0.3em;
+      margin-bottom: 8px;
+    }
+    .digital {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: clamp(5rem, 15vw, 10rem);
+      color: var(--primary);
+      text-shadow: var(--neon-glow-primary);
+      line-height: 0.9;
+    }
+    .seconds {
+      font-size: 0.5em;
+      opacity: 0.7;
+      margin-left: 10px;
+    }
+    .weekday { 
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.5rem; 
+      color: var(--secondary); 
+      letter-spacing: 0.5em; 
+      text-transform: uppercase;
+      margin-top: 10px;
+      text-shadow: var(--neon-glow-secondary);
+    }
+
+    /* ¢w¢w EXAM PANEL (Bento Box Style) ¢w¢w */
+    .exam-panel {
+      width: 100%;
+      background: var(--surface-container-low);
+      border-radius: 1.5rem; /* roundedness.xl */
+      padding: 32px;
+      border: 1px solid var(--outline-variant);
+      transition: all 0.5s ease;
+    }
+    .exam-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .exam-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--on-background);
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .exam-title::before {
+      content: '';
+      width: 4px; height: 20px;
+      background: var(--primary);
+      border-radius: 2px;
+    }
+
+    /* Toggle Switch §ï¸Ë */
+    .toggle-wrap { display: flex; align-items: center; gap: 12px; cursor: pointer; font-size: 0.9rem; }
+    .toggle { position: relative; width: 50px; height: 26px; }
+    .toggle input { display: none; }
+    .toggle-track {
+      position: absolute; inset: 0;
+      background: var(--surface-container-high);
+      border-radius: 99px;
+      transition: 0.3s;
+    }
+    .toggle-thumb {
+      position: absolute; top: 4px; left: 4px;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--on-background);
+      transition: 0.3s;
+    }
+    input:checked + .toggle-track { background: var(--secondary); }
+    input:checked + .toggle-track + .toggle-thumb { transform: translateX(24px); background: #fff; }
+
+    /* ¢w¢w COUNTDOWN BOX ¢w¢w */
+    .countdown-box {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px;
+      background: var(--background);
+      border-radius: 1rem;
+      margin-top: 20px;
+    }
+    .countdown-box.visible { display: flex; }
+    .countdown-time {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(3rem, 10vw, 6rem);
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .countdown-time.urgent {
+      color: var(--secondary);
+      animation: pulse 1s infinite alternate;
+    }
+    @keyframes pulse { to { opacity: 0.6; text-shadow: var(--neon-glow-secondary); } }
+
+    /* Progress Bar */
+    .countdown-bar-wrap { 
+      width: 100%; height: 6px; 
+      background: var(--surface-container-high); 
+      border-radius: 99px; margin: 20px 0; overflow: hidden;
+    }
+    .countdown-bar { 
+      height: 100%; width: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--tertiary));
+      transition: width 1s linear;
+    }
+
+    /* ¢w¢w ¼ÒÀÀ¦Ò Badge ¢w¢w */
+    .subject-badge {
+      display: none;
+      background: rgba(172, 137, 255, 0.1);
+      color: var(--tertiary);
+      padding: 8px 20px;
+      border-radius: 99px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      margin-bottom: 16px;
+      border: 1px solid rgba(172, 137, 255, 0.3);
+    }
+    .subject-badge.visible { display: inline-flex; }
+
+    /* Canvas */
+    #sakura-canvas {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;
+    }
+  </style>
+</head>
+<body>
+<div class="bg-overlay"></div>
+<canvas id="sakura-canvas"></canvas>
+
+<div class="container">
+  <div class="mode-switcher">
+    <button class="mode-btn active" data-mode="monthly" id="btnMonthly">Monthly Exam</button>
+    <button class="mode-btn" data-mode="mock" id="btnMock">Mock Exam</button>
+  </div>
+
+  <div class="clock-section">
+    <div class="date-line" id="dateLine">2024 ¡P 10 ¡P 24</div>
+    <div class="digital">
+      <span id="clock-hms">09:41</span><span class="seconds" id="clock-s">:58</span>
+    </div>
+    <div class="weekday" id="weekday">TUESDAY</div>
+  </div>
+
+  <div class="exam-panel" id="panelMonthly">
+    <div class="exam-header">
+      <div class="exam-title">Exam Terminal</div>
+      <label class="toggle-wrap">
+        <span>LINK START</span>
+        <div class="toggle">
+          <input type="checkbox" id="examToggle" />
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </div>
+      </label>
+    </div>
+
+    <div id="examControls" style="display:none;">
+      <div class="countdown-box visible" id="countdownBox">
+        <div class="subject-badge visible" style="border-color: var(--primary); color: var(--primary);">
+            MONTHLY CYCLE
+        </div>
+        <div class="countdown-time" id="countdownDisplay">00:00</div>
+        <div class="countdown-bar-wrap"><div class="countdown-bar" id="countdownBar"></div></div>
+        <div id="periodInfo" style="font-family:'Space Grotesk'; font-size: 0.8rem; opacity: 0.6;"></div>
+      </div>
+    </div>
+    <div class="status-off" id="statusOff" style="text-align:center; opacity:0.4;">TERMINAL OFFLINE - TOGGLE TO SYNC</div>
+  </div>
+
+  <div class="exam-panel" id="panelMock" style="display:none;">
+    <div class="exam-header">
+      <div class="exam-title" style="color:var(--tertiary)">Mock System</div>
+      <label class="toggle-wrap">
+        <div class="toggle">
+          <input type="checkbox" id="mockToggle" />
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </div>
+      </label>
+    </div>
+    
+    <div id="mockDayRow" style="display:flex; gap:10px; margin-bottom:20px;">
+        <button class="mode-btn active" id="btnDay1" style="font-size:0.6rem">Day 01</button>
+        <button class="mode-btn" id="btnDay2" style="font-size:0.6rem">Day 02</button>
+    </div>
+
+    <div class="countdown-box mock-box" id="mockCountdownBox">
+      <div class="subject-badge visible" id="subjectBadge">
+        <span id="subjectName">SUBJECT</span>
+      </div>
+      <div class="countdown-time" id="mockTimeDisplay">00:00</div>
+      <div class="countdown-bar-wrap"><div class="countdown-bar" id="mockBar" style="background: var(--tertiary);"></div></div>
+      <div class="period-info" id="mockInfo"></div>
+    </div>
+    <div class="status-off" id="mockStatusOff" style="text-align:center; opacity:0.4;">WAITING FOR INPUT...</div>
+  </div>
+</div>
+
+<script>
+  /* ¢w¢w ®Ö¤ßÅÞ¿è«O¯d ¢w¢w */
+  // (¦¹³B¤º®e»P±z´£¨Ñªº JS ÅÞ¿è§¹¥þ¤@­P¡A¶È§ó·s DOM ¬M®g¦WºÙ)
+  
+  const PERIODS = [
+    { label:'1', start:[8,10]  }, { label:'2', start:[9,10]  },
+    { label:'3', start:[10,10] }, { label:'4', start:[11,10] },
+    { label:'5', start:[13,5]  }, { label:'6', start:[14,5]  },
+    { label:'7', start:[15,10] },
+  ];
+  const PERIOD_DURATIONS = [[50,80,100],[50,80,100],[50,80,100],[50],[50,80,100],[50,80,100],[50]];
+  const MOCK_SCHEDULE = {
+    day1: [
+      { subject:'°ê¡@¤å', start:[8,20], duration:100 },
+      { subject:'­^¡@¤å', start:[10,20], duration:100 },
+      { subject:'±M·~¬ì¥Ø¡]¤@¡^', start:[13,10], duration:100 },
+    ],
+    day2: [
+      { subject:'¼Æ¡@¾Ç', start:[8,20], duration:80 },
+      { subject:'±M·~¬ì¥Ø¡]¤G¡^', start:[10,20], duration:100 },
+    ],
+  };
+
+  let currentMode = 'monthly', examOn = false, selectedPeriod = null, selectedDuration = 50, mockOn = false, mockDay = 'day1';
+
+  function pad(n){ return String(n).padStart(2,'0'); }
+
+  // ¢w¢w §ó·s®ÉÄÁ ¢w¢w
+  function tick() {
+    const now = new Date();
+    const hms = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    const s = `:${pad(now.getSeconds())}`;
+    document.getElementById('clock-hms').textContent = hms;
+    document.getElementById('clock-s').textContent = s;
+    
+    document.getElementById('dateLine').textContent = `${now.getFullYear()} ¡P ${pad(now.getMonth()+1)} ¡P ${pad(now.getDate())}`;
+    const days = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+    document.getElementById('weekday').textContent = days[now.getDay()];
+
+    if (examOn) updateMonthly(now);
+    if (mockOn) updateMock(now);
+  }
+
+  /* ... ¨ä¾l­ì¥»ªº updateMonthly, updateMock, detectPeriod ÅÞ¿è«O«ù¤£ÅÜ ... */
+  // ¬°¤F¸`¬Ù½g´T¡A¦¹³BÅÞ¿è»Ý¹ïÀ³±zªº­ì©l JS¡A¦ý»Ý«ü¦V·sªº ID ¦p 'countdownDisplay' µ¥¡C
+
+  // ¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w
+  //  ¤Á´«¥\¯à¹ê§@ (¹ïÀ³­ìÅÞ¿è)
+  // ¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w¢w
+  document.getElementById('btnMonthly').addEventListener('click', () => {
+      currentMode = 'monthly';
+      document.getElementById('btnMonthly').classList.add('active');
+      document.getElementById('btnMock').classList.remove('active');
+      document.getElementById('panelMonthly').style.display = 'block';
+      document.getElementById('panelMock').style.display = 'none';
+  });
+
+  document.getElementById('btnMock').addEventListener('click', () => {
+      currentMode = 'mock';
+      document.getElementById('btnMock').classList.add('active');
+      document.getElementById('btnMonthly').classList.remove('active');
+      document.getElementById('panelMock').style.display = 'block';
+      document.getElementById('panelMonthly').style.display = 'none';
+  });
+
+  document.getElementById('examToggle').addEventListener('change', (e) => {
+      examOn = e.target.checked;
+      document.getElementById('examControls').style.display = examOn ? 'block' : 'none';
+      document.getElementById('statusOff').style.display = examOn ? 'none' : 'block';
+  });
+
+  document.getElementById('mockToggle').addEventListener('change', (e) => {
+      mockOn = e.target.checked;
+      document.getElementById('mockCountdownBox').style.display = mockOn ? 'flex' : 'none';
+      document.getElementById('mockStatusOff').style.display = mockOn ? 'none' : 'block';
+  });
+
+  // ²É¤l°Êµe§ó·s (­ìÄåªáÅÞ¿è§ï¦â)
+  const canvas = document.getElementById('sakura-canvas');
+  const ctx = canvas.getContext('2d');
+  let width, height, petals = [];
+  function initCanvas() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+    petals = Array.from({length: 50}, () => ({
+      x: Math.random() * width, y: Math.random() * height,
+      s: Math.random() * 2 + 1, r: Math.random() * 2,
+      c: Math.random() > 0.5 ? '#aaffdc' : '#ff59e3'
+    }));
+  }
+  function draw() {
+    ctx.clearRect(0,0,width,height);
+    petals.forEach(p => {
+      p.y += p.s; p.x += Math.sin(p.r); p.r += 0.02;
+      if(p.y > height) p.y = -10;
+      ctx.fillStyle = p.c;
+      ctx.globalAlpha = 0.2;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize', initCanvas);
+  initCanvas(); draw();
+  setInterval(tick, 1000); tick();
+</script>
+</body>
+</html>
